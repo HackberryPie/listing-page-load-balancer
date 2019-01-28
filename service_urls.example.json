@@ -1,5 +1,5 @@
-// Save this file at the top of the project repo as service_urls.json and fill
-// in the URLs. Don't forget to delete this comment, comments aren't allowed in strict JSON!
+  Save this file at the top of the project repo as service_urls.json and fill
+ in the URLs. Don't forget to delete this comment, comments aren't allowed in strict JSON!
 {
   "carousel" : {
     "API_URL": "http://service-domain-here/api/carousel/",

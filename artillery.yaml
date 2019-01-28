@@ -1,0 +1,11 @@
+config:
+  target: "http://localhost:80"
+  phases:
+    - duration: 30
+      arrivalRate: 1000
+scenarios:
+  - flow:
+      - log: "New virtual user running"
+      - get:
+          url: "/1"
+      

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "target": "http://18.216.123.1:3010",
+        "phases": [
+            {
+                "duration": 30,
+                "arrivalRate": 60000
+            }
+        ],
+        "payload": {
+            "path": "./artillery.csv",
+            "fields": [
+                "listing"
+            ]
+        }
+    },
+    "scenarios": [
+        {
+            "flow": [
+                {
+                    "get": {
+                        "url": "/{{{ listing }}}"
+                    }
+                }
+            ]
+        }
+    ]
+}

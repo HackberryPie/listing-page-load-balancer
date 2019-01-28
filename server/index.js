@@ -4,6 +4,14 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const axios = require('axios');
 const compression = require('compression');
+const request = require('request');
+const { renderToString } = require('react-dom/server')
+const React = require('react');
+const DOMParser = require('dom-parser');
+const fs = require('fs');
+
+const fetch = require('node-fetch');
+const getAllHTML = require('../index.html');
 
 ////////////////////////////////////////
 //  Remote Server Endpoints
@@ -12,6 +20,7 @@ const service_urls = require('../service_urls.json');
 let app = express();
 
 let PORT = process.env.PORT || 3000;
+let { AWS_carousel, AWS_description, AWS_similar } = require('../config')
 
 let staticPath = path.join(__dirname, '../public');
 
@@ -21,92 +30,55 @@ app.use(morgan('dev'));
 app.use(bodyParser.json());
 app.use(compression());
 
-// Use EJS templating
-app.set('view engine', 'ejs');
+
+//Server Routes
+
+// Static Files
+app.use('/listing/static/', express.static(path.resolve(__dirname, '../public')));
 
 /////////////////////
 //  Render index.html from Template
-app.get('/:id(\\d+)/', (req, res) => {
-  res.render(
-    path.join(__dirname, '../templates/index.ejs'),
-    service_urls,
-    (err, html) => {
-      if (err) {
-        console.log('Error rendering HTML:', err);
-        return res.sendStatus(500);
-      }
-      res.send(html);
-    }
-  );
+app.get('/:id', (req, res) => {
+
+  console.log("Request Received: ", req.params);
+  const listingId = req.params.id;
+
+  if (!listingId % 1 || listingId < 1 || listingId > 10000000) {
+    res.sendStatus(407).json("Param not accepted")
+  }
+
+
+  request(AWS_carousel + '/' + listingId, function (request, response, component) {
+    console.log('component:', component)
+    res.send(getAllHTML(component))
+
+
+  })
+  // let component ="";
+
+  // let 
+  // let stream = fetch(AWS_carousel + '/' + listingId)
+
+  // stream.on('data',chunk => component+= chunk.toString())
+  // stream.on('end', ()=>{
 });
+   
+    
+ 
 
-/////////////////////
-//  Serve Other Static Assets
-app.use('/:id(\\d+)/', express.static(staticPath));
-app.use('/', express.static(staticPath));
 
-////////////////////////////////////////
-//  API Call Redirection
 
-// Carousel
-app.get(service_urls.carousel.LOCAL_API_TARGET, (req, res) => {
-  const itemId = req.params.id;
-  axios
-    .get(service_urls.carousel.API_URL + itemId)
-    .then(result => {
-      res.json(result.data);
-    })
-    .catch(err => {
-      console.log('Error fetching from carousel API:', err);
-      res.sendStatus(500);
-    });
-});
 
-// Details
-app.get(service_urls.details.LOCAL_API_TARGET, (req, res) => {
-  const itemId = req.params.id;
-  axios
-    .get(service_urls.details.API_URL + itemId)
-    .then(result => {
-      res.json(result.data);
-    })
-    .catch(err => {
-      console.log('Error fetching from details API:', err);
-      res.sendStatus(500);
-    });
-});
+// var getRemoteComponent = function (URI, callback) {
+//   callback(fetch(URI))
+// }
 
-// Description
-app.get(service_urls.description.LOCAL_API_TARGET, (req, res) => {
-  const itemId = req.params.id;
-  axios
-    .get(service_urls.description.API_URL + itemId)
-    .then(result => {
-      res.json(result.data);
-    })
-    .catch(err => {
-      console.log('Error fetching from description API:', err);
-      res.sendStatus(500);
-    });
-});
 
-// Similar Listings
-app.get(service_urls.similar.LOCAL_API_TARGET, (req, res) => {
-  const itemId = req.params.id;
-  axios
-    .get(service_urls.similar.API_URL + itemId)
-    .then(result => {
-      res.json(result.data);
-    })
-    .catch(err => {
-      console.log('Error fetching from similar listings API:', err);
-      res.sendStatus(500);
-    });
-});
 
 ////////////////////////////////////////
 //  Instantate Server
 app.listen(PORT, err => {
   if (err) return console.log('Error starting server:', err);
   console.log('Succesfully started server on:', PORT);
+  process.env.COUNTER = 0;
 });
